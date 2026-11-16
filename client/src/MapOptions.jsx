@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { api, fromHex, toHex } from './api.js'
 
-const LEVELS = ['Easy', 'Normal', 'Hard', 'Expert']
+const LEVELS = ['Easy', 'Normal', 'Hard', 'Expert', 'ExpertPlus']
+const LEVEL_NAMES = { ExpertPlus: 'Expert+' }
 const FEELS = [
   { id: 'straight', label: 'Straight (1/4 notes)', per_beat: 4, map_beats_per_pulse: 1 },
   { id: 'swung', label: 'Swung / triplets (1/3)', per_beat: 3, map_beats_per_pulse: 1 },
@@ -118,9 +119,10 @@ export default function MapOptions({ song, status, coverVersion, onJob }) {
         <h2>Difficulties</h2>
         <div className="chips">
           {LEVELS.map((level) => (
-            <button key={level} className={levels.includes(level) ? `chip on ${level.toLowerCase()}` : 'chip'} onClick={() => toggleLevel(level)}>{level}</button>
+            <button key={level} className={levels.includes(level) ? `chip on ${level.toLowerCase()}` : 'chip'} onClick={() => toggleLevel(level)}>{LEVEL_NAMES[level] || level}</button>
           ))}
         </div>
+        <p className="small muted">Red dot notes you placed in a chosen level (in ChroMapper) are kept as a guide: each dot becomes a note there. Stretches with no dots for 8 seconds or more are filled in for you; shorter gaps stay as rests.</p>
       </div>
 
       <div className="card">
@@ -181,7 +183,7 @@ export default function MapOptions({ song, status, coverVersion, onJob }) {
         <h2>Extras</h2>
         <label className="toggle"><input type="checkbox" checked={patterns} onChange={(e) => setPatterns(e.target.checked)} /> <span><b>Varied patterns</b>: travel, crossovers, doubles, stacks, chains and arcs on Normal and up, instead of plain up-down</span></label>
         <div className="toggle">
-          <span><b>Combo areas on Expert</b>: the song's most frantic part becomes a steady stream of notes that only breaks for a breath; elsewhere, back-to-back runs where the voice and drums are busy</span>
+          <span><b>Combo areas on Expert and Expert+</b>: the song's most frantic part becomes a steady stream of notes that only breaks for a breath; elsewhere, back-to-back runs where the voice and drums are busy</span>
           <select value={String(combos)} onChange={(e) => setCombos(e.target.value === 'auto' ? 'auto' : e.target.value === 'true')}>
             <option value="auto">Auto ({a.combos_auto ? 'on' : 'off'} for this song)</option>
             <option value="true">On</option>

@@ -26,7 +26,7 @@ import style_engine
 import tempo_auto
 
 HERE = Path(__file__).resolve().parent
-LEVELS = ("Easy", "Normal", "Hard", "Expert")
+LEVELS = ("Easy", "Normal", "Hard", "Expert", "ExpertPlus")
 COMBO_SETTINGS = {"combos": True, "max_rest_s": 0.6, "per_second": 4.0}
 
 
@@ -188,8 +188,8 @@ def build(job):
            "version": 2}
     if tempo.get("tempo_sections"):
         cfg["tempo_sections"] = tempo["tempo_sections"]
-    if combos and "Expert" in difficulties:
-        cfg["settings"] = {"Expert": COMBO_SETTINGS}
+    if combos and ("Expert" in difficulties or "ExpertPlus" in difficulties):
+        cfg["settings"] = {"Expert": COMBO_SETTINGS, "ExpertPlus": COMBO_SETTINGS}
     if job.get("lightshow"):
         cfg["lightshow_mode"] = {"environment": "KaleidoscopeEnvironment", "colors": colors, "style": {**style, "colorful": True, "beat_locked": True}}
     config_file = HERE / "config" / "batch2_songs.json"
@@ -229,7 +229,9 @@ def build(job):
             shutil.rmtree(out, ignore_errors=True)
         text = str(stop)
         if "has changed since this tool built it" in text:
-            text = f"{Path(text.split(' has changed')[0]).name} was edited (in ChroMapper?) after this map was made, so nothing was overwritten. To keep your edits, make the new version under another folder name."
+            text = f"{Path(text.split(' has changed')[0]).name} was edited (in ChroMapper?) after this map was made, so nothing was overwritten. To keep your edits, make the new version under another folder name. (Adding red dot guide notes is fine; other changes count as edits.)"
+        elif " has red dot markers" in text:
+            text = f"{Path(text.split(' has red dot markers')[0]).name} has red dot markers{text.split(' has red dot markers', 1)[1]}"
         raise UserError(f"The map builder stopped: {text}")
     except Exception:
         if created:

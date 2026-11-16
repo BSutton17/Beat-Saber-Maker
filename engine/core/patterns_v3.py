@@ -310,27 +310,31 @@ def add_combo_runs(steps, measures, times, levels, max_run=8, pace=None, activit
     return sorted(set(out) | stream_set)
 
 
-def plan_doubles(steps, scores, measures, times, per_beat, settings, profile, levels, offset=0, streams=()):
+def plan_doubles(steps, scores, measures, times, per_beat, settings, profile, levels, offset=0, streams=(), keep=()):
     """Doubles on strong hits on the beat, more of them in bigger sections, after an even number of single swings so both arms are going the same way.
-    None inside a stream: a double needs room around it, and that room would put holes in the stream."""
+    None inside a stream: a double needs room around it, and that room would put holes in the stream.
+    Steps in keep (a guide level's red dot markers) are never dropped to make room: a double only goes where the room is already there."""
     room = settings["double_room_s"]
-    streams = set(streams)
+    streams, keep = set(streams), set(keep)
+    keep_times = np.array(sorted(times[s] for s in keep)) if keep else np.array([])
+    crowded = lambda t: bool(len(keep_times)) and bool(np.any((keep_times > t + 1e-6) & (keep_times < t + room)))
     hit = (measures[:, KICK] >= 0.6) | (measures[:, SNARE] >= 0.9) | (measures[:, PHRASE] >= 0.35)
     kept, doubles = [], set()
     per_level = {}
     singles = 0
     skip_until = -1.0
     for step in steps:
-        if times[step] < skip_until and step not in streams:
+        if times[step] < skip_until and step not in streams and step not in keep:
             continue
         level = levels[step]
         seen, made = per_level.get(level, (0, 0))
         if kept and times[step] - times[kept[-1]] >= settings["reset_s"]:
             singles = 0
-        wanted = (step - offset) % per_beat == 0 and bool(hit[step]) and made < profile["doubles_by_level"][level] * (seen + 1) and step not in streams
+        wanted = (step - offset) % per_beat == 0 and bool(hit[step]) and made < profile["doubles_by_level"][level] * (seen + 1) and step not in streams and not crowded(times[step])
         tight = wanted and bool(kept) and times[step] - times[kept[-1]] < room and kept[-1] not in doubles and (singles - 1) % 2 == 0
         # in bigger sections a strong double may replace the single just before it, so both arms line up for it
         tight = tight or (wanted and level >= 2 and bool(kept) and kept[-1] not in doubles and singles % 2 == 1 and scores[step] > scores[kept[-1]])
+        tight = tight and kept[-1] not in keep
         if tight:
             kept.pop()
             singles -= 1

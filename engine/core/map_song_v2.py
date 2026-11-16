@@ -18,6 +18,7 @@ import numpy as np
 from scipy import signal
 
 import grid_tools
+import guides
 import lights_v2
 import metrics
 import notes_v2
@@ -27,7 +28,10 @@ from mapfiles import PROJECT, WIP
 from rhythm_features_v2 import NAMES, stems_at
 
 CONFIG = PROJECT / "config" / "batch2_songs.json"
-LEVEL_ORDER = ("Easy", "Normal", "Hard", "Expert")
+LEVEL_ORDER = ("Easy", "Normal", "Hard", "Expert", "ExpertPlus")
+# Expert+ is built by Expert's model and rules (there is no Expert+ model), a little faster: the user set 16 for their own MY EYES Expert+
+BASE_LEVEL = {"ExpertPlus": "Expert"}
+LEVEL_CHANGES = {"ExpertPlus": {"njs": 16.0}}
 RANK = {"Easy": 1, "Normal": 3, "Hard": 5, "Expert": 7, "ExpertPlus": 9}
 SABERS = {"saberAColor": "C81414FF", "saberBColor": "288ED2FF", "obstaclesColor": "FF3030FF"}
 PLACES = 4
@@ -83,8 +87,9 @@ def digest(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def by_value(path):
-    """A map file's content, ignoring what ChroMapper changes when it only re-saves: number formatting, list order, and its own editor notes."""
+def by_value(path, markers=True):
+    """A map file's content, ignoring what ChroMapper changes when it only re-saves: number formatting, list order, and its own editor notes.
+    With markers=False, red dot guide markers (guides.py) are left out too."""
     def plain(value):
         if isinstance(value, (bool, str)) or value is None:
             return value
@@ -94,6 +99,8 @@ def by_value(path):
             return sorted((plain(v) for v in value), key=lambda v: json.dumps(v, sort_keys=True))
         return {k: plain(v) for k, v in sorted(value.items()) if k not in ("customData", "songDuration")}
     data = json.loads(Path(path).read_text(encoding="utf-8"))
+    if not markers:
+        data = guides.without_markers(data)
     if "colorBoostEvents" in data:
         last = {}
         for e in data["colorBoostEvents"]:
@@ -131,10 +138,15 @@ def main():
     if out.exists():
         if not replace:
             sys.exit(f"refusing to write into an existing folder: {out}")
+        # red dots added since are guide markers (guides.py), not edits
         for kept in record.glob("*.dat"):
             current = out / kept.name
-            if current.exists() and digest(current) != digest(kept) and by_value(current) != by_value(kept):
+            if current.exists() and digest(current) != digest(kept) and by_value(current, markers=False) != by_value(kept, markers=False):
                 sys.exit(f"{current} has changed since this tool built it. Check for hand edits before replacing it.")
+    # the chosen levels' red dot markers, read before anything is overwritten, in seconds
+    marked, mixed = guides.find(out, record, [l for l in LEVEL_ORDER if l in cfg["difficulties"]]) if out.exists() else ({}, {})
+    if mixed:
+        sys.exit(f"{out / next(iter(mixed.values()))} has red dot markers and other notes this tool didn't make, which a rebuild would replace. Remove the other notes, or make this map under another folder name.")
     raw = WIP / cfg["raw"]
     source = raw if raw.exists() else out / cfg["song_file"]
     stems = PROJECT / "analysis" / "stems_songs" / name
@@ -182,16 +194,21 @@ def main():
     for a, b, section_level in sections:
         levels[a * per_beat:b * per_beat + 1] = section_level
     for level in [l for l in LEVEL_ORDER if l in cfg["difficulties"]]:
-        # a song may adjust a level's settings, e.g. {"Expert": {"combos": true, "max_rest_s": 0.6, "per_second": 4.0}} for combo areas; songs without it build as before
+        base = BASE_LEVEL.get(level, level)
+        # a song may adjust a level's settings, e.g. {"Expert": {"combos": true, "max_rest_s": 0.6, "per_second": 4.0}} for combo areas; songs without it build as before.
+        # Expert+ takes Expert's adjustments unless it has its own.
         # engine version 2 (Beat Saber Maker) also paces the notes by the song's calm and busy parts (models/pacing_v1)
-        settings = {**notes_v2.DIFFICULTY[level], **({"pacing": True} if cfg.get("version", 1) >= 2 else {}), **cfg.get("settings", {}).get(level, {})}
-        scores = rhythm_model_v2.score(measures, level)
-        floor = weights["levels"][level]["floor"]
-        wanted = min(settings["per_second"], expert_rate * notes_v2.SHARE_OF_EXPERT[level]) * cfg.get("density", {}).get(level, 1.0)
+        song_settings = cfg.get("settings", {})
+        settings = {**notes_v2.DIFFICULTY[base], **LEVEL_CHANGES.get(level, {}), **({"pacing": True} if cfg.get("version", 1) >= 2 else {}), **song_settings.get(level, song_settings.get(base, {}))}
+        scores = rhythm_model_v2.score(measures, base)
+        floor = weights["levels"][base]["floor"]
+        wanted = min(settings["per_second"], expert_rate * notes_v2.SHARE_OF_EXPERT[base]) * cfg.get("density", {}).get(level, 1.0)
         chains, arcs = [], []
         wants_patterns = cfg.get("patterns")
-        if (wants_patterns is True and level in ("Normal", "Hard", "Expert")) or (isinstance(wants_patterns, list) and level in wants_patterns):
-            made, chains, arcs = notes_v2.make_notes_v3(scores, measures, times, per_beat, spans, settings, wanted if level != "Expert" else settings["per_second"], floor, offset, levels, level)
+        # a guide level (red dot markers) always goes through the pattern engine, which keeps every marker
+        guide = guides.plan(marked[level], times, per_beat) if level in marked else None
+        if guide is not None or (wants_patterns is True and base in ("Normal", "Hard", "Expert")) or (isinstance(wants_patterns, list) and level in wants_patterns):
+            made, chains, arcs = notes_v2.make_notes_v3(scores, measures, times, per_beat, spans, settings, wanted if base != "Expert" else settings["per_second"], floor, offset, levels, base, guide=guide)
         else:
             made = expert if level == "Expert" else notes_v2.make_notes(scores, measures, times, per_beat, spans, settings, wanted, floor, offset)
         meta_of = lambda n: {"x": n["x"], "y": n["y"], "c": n["c"], "d": n["d"], "a": 0}
@@ -213,6 +230,9 @@ def main():
         moments = sorted({n["step"] for n in made})
         seconds = times[moments]
         report["difficulties"][level] = {"chains": len(chain_items), "arcs": len(arc_items), "notes": len(made), "moments": len(moments), "per_second": round(len(made) / (seconds[-1] - seconds[0]), 2), "first_note_s": round(float(seconds[0]), 2), "longest_rest_s": round(float(np.diff(seconds).max()), 2), "njs": njs, "offset": jump}
+        if guide is not None:
+            # how many markers got a note (a marker can only miss one if no hand could reach it)
+            report["difficulties"][level]["guide"] = {**guide[2], "missed": len(guide[0] - set(moments))}
 
     events, boosts = lights_v2.generate(times, measures, per_beat, sections, cfg["style"], cfg["environment"], offset)
     light_rows = [(to_beat(step), {"t": lane, "i": value, "f": strength}) for step, lane, value, strength in events]
@@ -274,6 +294,10 @@ def main():
             stale.unlink()
     for file_name in ("Info.dat", "AudioData.dat", "Lightshow.dat", *beatmaps, *extra_files):
         shutil.copy2(out / file_name, record / file_name)
+    # the built guide levels hold notes now, not dots, so their markers are kept here for the next rebuild (levels not built this time keep theirs)
+    saved_guides = json.loads((record / guides.SAVED).read_text(encoding="utf-8")) if (record / guides.SAVED).exists() else {}
+    saved_guides.pop("about", None)
+    guides.save(record, {**saved_guides, **marked})
     (record / "report.json").write_text(json.dumps(report, indent=1), encoding="utf-8")
     print(json.dumps(report))
 

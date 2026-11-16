@@ -19,7 +19,7 @@ export default function Result({ song }) {
         <thead><tr><th>Difficulty</th><th>Notes</th><th>Per second</th><th>Longest rest</th><th>Chains</th><th>Arcs</th></tr></thead>
         <tbody>
           {levels.map(([level, r]) => (
-            <tr key={level}><td>{level}</td><td>{r.notes}</td><td>{r.per_second}</td><td>{r.longest_rest_s} s</td><td>{r.chains}</td><td>{r.arcs}</td></tr>
+            <tr key={level}><td>{level === 'ExpertPlus' ? 'Expert+' : level}{r.guide ? ` (from ${r.guide.markers} red dots)` : ''}</td><td>{r.notes}</td><td>{r.per_second}</td><td>{r.longest_rest_s} s</td><td>{r.chains}</td><td>{r.arcs}</td></tr>
           ))}
         </tbody>
       </table>

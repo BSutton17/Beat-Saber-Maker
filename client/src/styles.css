@@ -97,6 +97,7 @@ input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 0;
 .chip.on.normal { background: #1d4f86; border-color: #3a8cff; }
 .chip.on.hard { background: #7a5113; border-color: #f0a030; }
 .chip.on.expert { background: #7a1626; border-color: var(--red); }
+.chip.on.expertplus { background: #4f1a6e; border-color: #b45cf0; }
 
 .segmented { display: inline-flex; background: #0f1220; border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
 .segmented button { background: transparent; border-radius: 999px; padding: 5px 16px; font-size: 13px; }

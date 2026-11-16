@@ -195,8 +195,16 @@ def plan_doubles(steps, scores, measures, times, per_beat, settings, offset):
     return kept, doubles
 
 
-def make_notes_v3(scores, measures, times, per_beat, spans, settings, per_second, floor, offset, levels, level_name):
-    """The same rhythm, placed by the pattern engine. Returns (notes, chains, arcs)."""
+def guided(steps, guide):
+    """With a guide (guides.plan: marker steps and where else notes may go), the markers are the notes, plus the engine's own only in the undone parts."""
+    if guide is None:
+        return steps
+    markers, allowed = guide[0], guide[1]
+    return sorted(set(markers) | {s for s in steps if allowed[s]})
+
+
+def make_notes_v3(scores, measures, times, per_beat, spans, settings, per_second, floor, offset, levels, level_name, guide=None):
+    """The same rhythm, placed by the pattern engine. Returns (notes, chains, arcs). A guide's marker steps are always kept (see guided)."""
     import patterns_v3
     pace = pace_for(measures, per_beat) if settings.get("pacing") else None
     activity = activity_for(measures, times) if settings.get("pacing") else None
@@ -209,7 +217,9 @@ def make_notes_v3(scores, measures, times, per_beat, spans, settings, per_second
         if settings.get("pacing"):
             streams = patterns_v3.stream_steps(measures, times, levels, per_beat, offset, activity)
         steps = patterns_v3.add_combo_runs(steps, measures, times, levels, pace=pace, activity=activity, streams=streams)
-    steps, doubles = patterns_v3.plan_doubles(steps, scores, measures, times, per_beat, settings, profile, levels, offset, streams=streams[0])
+    steps = guided(steps, guide)
+    keep = guide[0] if guide is not None else ()
+    steps, doubles = patterns_v3.plan_doubles(steps, scores, measures, times, per_beat, settings, profile, levels, offset, streams=streams[0], keep=keep)
     return patterns_v3.place(steps, doubles, measures, times, levels, settings, profile, offset)
 
 
