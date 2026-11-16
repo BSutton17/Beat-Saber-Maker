@@ -3,17 +3,69 @@
   "name": "The First (Default)",
   "look": "Classic rings and lasers over a dark runway. Fits almost anything."
  },
+ "TriangleEnvironment": {
+  "name": "Triangle",
+  "look": "The classic rings and lasers inside a glowing triangular tunnel. Clean and all-purpose."
+ },
+ "NiceEnvironment": {
+  "name": "Nice",
+  "look": "Rings with lasers above and below the track instead of at the sides. Bright and upbeat."
+ },
  "BigMirrorEnvironment": {
   "name": "Big Mirror",
   "look": "A mirrored floor that reflects every light, like a ballroom. Warm and romantic."
  },
- "PanicEnvironment": {
-  "name": "Panic",
-  "look": "A dark theatrical hall with very bright rings. Dramatic, for songs that build."
- },
  "KDAEnvironment": {
   "name": "K/DA",
   "look": "A glossy stage with glowing arrows and lasers. Sleek pop, rap and R&B."
+ },
+ "DragonsEnvironment": {
+  "name": "Imagine Dragons",
+  "look": "A rock stage with rings and side lights. Big, anthemic pop rock."
+ },
+ "MonstercatEnvironment": {
+  "name": "Monstercat",
+  "look": "A dark stage under the Monstercat logo with lasers and spinning rings. Electronic and dance."
+ },
+ "CrabRaveEnvironment": {
+  "name": "Crab Rave",
+  "look": "The Monstercat stage in green and blue. Fun, bouncy electronic."
+ },
+ "PanicEnvironment": {
+  "name": "Panic! at the Disco",
+  "look": "A dark theatrical hall with very bright rings. Dramatic, for songs that build."
+ },
+ "RocketEnvironment": {
+  "name": "Rocket League",
+  "look": "A stadium arena in orange and blue. Fast, sporty and energetic."
+ },
+ "OriginsEnvironment": {
+  "name": "Origins",
+  "look": "Soft blue lights and spinning rings. Gentle, light and uplifting."
+ },
+ "GreenDayEnvironment": {
+  "name": "Green Day",
+  "look": "A gritty rock stage with rings. Punk and rock."
+ },
+ "GreenDayGrenadeEnvironment": {
+  "name": "Green Day Grenade",
+  "look": "Green Day's stage with a giant grenade and haze instead of rings. Punk and rock."
+ },
+ "TimbalandEnvironment": {
+  "name": "Timbaland",
+  "look": "A dark tunnel of ring lasers, with Timbaland's name always lit on the sides. Hip hop and R&B beats."
+ },
+ "FitBeatEnvironment": {
+  "name": "FitBeat",
+  "look": "A neon tunnel of ring lasers and a chevron. Workout energy and steady pop beats."
+ },
+ "LinkinParkEnvironment": {
+  "name": "Linkin Park",
+  "look": "A cracked concrete hall with floor and ceiling lights. Heavy, intense rock."
+ },
+ "BTSEnvironment": {
+  "name": "BTS",
+  "look": "A huge stage with a glowing logo, runway, spinning towers and rising pillars. Big K-pop."
  },
  "KaleidoscopeEnvironment": {
   "name": "Kaleidoscope",
@@ -23,12 +75,32 @@
   "name": "Interscope",
   "look": "A street of hydraulic cars and lasers. Party, club and hip hop."
  },
+ "SkrillexEnvironment": {
+  "name": "Skrillex",
+  "look": "Two sets of rings and lasers in a wild neon space. Dubstep and heavy drops."
+ },
  "BillieEnvironment": {
   "name": "Billie Eilish",
   "look": "A sun or moon over water with rain and rays. Calm, moody, cinematic."
  },
+ "HalloweenEnvironment": {
+  "name": "Spooky",
+  "look": "A moonlit walkway with lasers. Halloween, eerie and playful."
+ },
  "GagaEnvironment": {
   "name": "Lady Gaga",
   "look": "Tall towers and auroras under the stars. Big, emotional and wide open."
+ },
+ "WeaveEnvironment": {
+  "name": "Weave",
+  "look": "Floating platforms crossed by spotlights. Minimal and precise. Built for the newer lighting system, so the lights made here only reach its platform lights."
+ },
+ "PyroEnvironment": {
+  "name": "Fall Out Boy",
+  "look": "A concert stage with screens, spotlights and fire. Loud pop punk. Built for the newer lighting system, so the lights made here reach the stage but not its spotlights or fire."
+ },
+ "EDMEnvironment": {
+  "name": "EDM",
+  "look": "A festival stage with rings and cone lasers. Electronic and dance. Built for the newer lighting system, so the lights made here only reach its lane and floor lights."
  }
 }

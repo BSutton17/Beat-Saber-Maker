@@ -24,7 +24,7 @@ FOREHAND = {LEFT: (DOWN, DOWN_LEFT, DOWN_RIGHT, TO_RIGHT), RIGHT: (DOWN, DOWN_LE
 BACKHAND = {LEFT: (UP, UP_LEFT, UP_RIGHT, TO_LEFT), RIGHT: (UP, UP_LEFT, UP_RIGHT, TO_RIGHT)}
 DOWNWARD = (DOWN, DOWN_LEFT, DOWN_RIGHT)
 SIDE = (TO_LEFT, TO_RIGHT)
-KICK, SNARE, SYLLABLE, PHRASE, VOCAL_ACTIVE, OTHER, VOCAL_ONSET, ENERGY_COLUMN = (NAMES.index(n) for n in ("kick", "snare_hat", "syllable", "phrase_start", "vocal_active", "other", "vocal_onset", "energy"))
+KICK, SNARE, SYLLABLE, PHRASE, VOCAL_ACTIVE, OTHER, VOCAL_ONSET, ENERGY_COLUMN, CHORD = (NAMES.index(n) for n in ("kick", "snare_hat", "syllable", "phrase_start", "vocal_active", "other", "vocal_onset", "energy", "chord_change"))
 # face notes block the view of what's coming
 BLOCKED = {(1, 1), (2, 1)}
 FAST_HAND_S = 0.36
@@ -234,12 +234,62 @@ COMBO_ACTIVITY = 1.0
 COMBO_PACE = 0.9
 
 
-def add_combo_runs(steps, measures, times, levels, max_run=8, pace=None, activity=None):
+# streams: in a song's frantic parts, a note on every step, with a break only where the music takes one. From the user's own Expert+ of MY EYES (16 Nov 2026): its fast
+# second half is a note on every quarter beat (0.2 s apart), broken only twice in 90 seconds, and that part is exactly the song's one big lighting section (level 3).
+# The calm first half has no stream, so a stream needs a big section that is also much busier than the song usually is. Only with pacing (engine version 2).
+STREAM_LEVEL = 3
+STREAM_ACTIVITY = 1.2
+STREAM_MIN_S = 6.0
+# a grid faster than this streams on every other step, so a fast song doesn't become a blur
+STREAM_MIN_STEP_S = 0.15
+# a long stream rests for one beat before a new phrase, once in each stretch of this many seconds. The user's runs lasted 23-38 s.
+STREAM_BREATH_S = (22.0, 38.0)
+STREAM_REST_S = 0.6
+
+
+def stream_steps(measures, times, levels, per_beat, offset=0, activity=None):
+    """The steps of every stream: each big section that's much busier than the song usually is, filled on every step (every other on a fast grid),
+    with quiet moments left empty and a one-beat rest before a new phrase in long runs. Returns (steps, [(first, last) of each stream area])."""
+    out, areas = set(), []
+    big = levels >= STREAM_LEVEL
+    k = 0
+    while k < len(times):
+        if not big[k]:
+            k += 1
+            continue
+        end = k
+        while end + 1 < len(times) and big[end + 1]:
+            end += 1
+        first, last = k, end
+        k = end + 1
+        if times[last] - times[first] < STREAM_MIN_S or (activity is not None and float(np.median(activity[first:last + 1])) < STREAM_ACTIVITY):
+            continue
+        stride = 1 if float(np.median(np.diff(times[first:last + 1]))) >= STREAM_MIN_STEP_S else 2
+        run = {s for s in range(first, last + 1) if (s - offset) % stride == 0 and measures[s, ENERGY_COLUMN] >= 0.42}
+        # rests: the strongest new phrase on a beat in each stretch, with the beat before it left empty, so the phrase lands on a fresh swing
+        at = times[first]
+        while times[last] - at > STREAM_BREATH_S[1]:
+            window = [s for s in range(first, last + 1) if at + STREAM_BREATH_S[0] <= times[s] <= at + STREAM_BREATH_S[1] and (s - offset) % per_beat == 0]
+            if not window:
+                break
+            phrase = max(window, key=lambda s: measures[s, PHRASE] + 0.3 * measures[s, CHORD])
+            beat_s = times[phrase] - times[max(phrase - per_beat, 0)]
+            run -= {s for s in run if times[phrase] - max(beat_s, STREAM_REST_S) < times[s] < times[phrase]}
+            at = times[phrase]
+        out |= run
+        areas.append((first, last))
+    return out, areas
+
+
+def add_combo_runs(steps, measures, times, levels, max_run=8, pace=None, activity=None, streams=()):
     """Combo areas: where the voice or the drums keep moving, fill the space between notes with back-to-back steps, so busy parts play as continuous runs.
 
     Only on the step grid, never finer, and each run stops after max_run notes for a breath. The user asked for these on Expert: fewer gaps, more combos, not harder cuts.
+    Streams (stream_steps) replace whatever was chosen inside them, and have no max_run: they only break where stream_steps leaves a rest.
     """
-    chosen = set(steps)
+    stream_set, areas = streams if streams else (set(), [])
+    inside = lambda s: any(a <= s <= b for a, b in areas)
+    chosen = {s for s in steps if not inside(s)}
     busy = (measures[:, SYLLABLE] > 0.2) | (measures[:, VOCAL_ONSET] > 0.5) | (measures[:, SNARE] > 0.5) | (measures[:, OTHER] > 0.7)
     ordered = sorted(chosen)
     for a, b in zip(ordered, ordered[1:]):
@@ -247,7 +297,7 @@ def add_combo_runs(steps, measures, times, levels, max_run=8, pace=None, activit
             continue
         for k in range(a + 1, b):
             # given a pace, only parts that aren't quiet and where the drums and voice are busy for this song get combos, so calm parts stay calm
-            if busy[k] and measures[k, ENERGY_COLUMN] >= 0.42 and (pace is None or pace[k] >= COMBO_PACE) and (activity is None or activity[k] >= COMBO_ACTIVITY):
+            if busy[k] and measures[k, ENERGY_COLUMN] >= 0.42 and (pace is None or pace[k] >= COMBO_PACE) and (activity is None or activity[k] >= COMBO_ACTIVITY) and not inside(k):
                 chosen.add(k)
     # break any run that grew past max_run, so the player gets a breath
     out, run = [], 0
@@ -257,25 +307,27 @@ def add_combo_runs(steps, measures, times, levels, max_run=8, pace=None, activit
             run = 0
             continue
         out.append(k)
-    return out
+    return sorted(set(out) | stream_set)
 
 
-def plan_doubles(steps, scores, measures, times, per_beat, settings, profile, levels, offset=0):
-    """Doubles on strong hits on the beat, more of them in bigger sections, after an even number of single swings so both arms are going the same way."""
+def plan_doubles(steps, scores, measures, times, per_beat, settings, profile, levels, offset=0, streams=()):
+    """Doubles on strong hits on the beat, more of them in bigger sections, after an even number of single swings so both arms are going the same way.
+    None inside a stream: a double needs room around it, and that room would put holes in the stream."""
     room = settings["double_room_s"]
+    streams = set(streams)
     hit = (measures[:, KICK] >= 0.6) | (measures[:, SNARE] >= 0.9) | (measures[:, PHRASE] >= 0.35)
     kept, doubles = [], set()
     per_level = {}
     singles = 0
     skip_until = -1.0
     for step in steps:
-        if times[step] < skip_until:
+        if times[step] < skip_until and step not in streams:
             continue
         level = levels[step]
         seen, made = per_level.get(level, (0, 0))
         if kept and times[step] - times[kept[-1]] >= settings["reset_s"]:
             singles = 0
-        wanted = (step - offset) % per_beat == 0 and bool(hit[step]) and made < profile["doubles_by_level"][level] * (seen + 1)
+        wanted = (step - offset) % per_beat == 0 and bool(hit[step]) and made < profile["doubles_by_level"][level] * (seen + 1) and step not in streams
         tight = wanted and bool(kept) and times[step] - times[kept[-1]] < room and kept[-1] not in doubles and (singles - 1) % 2 == 0
         # in bigger sections a strong double may replace the single just before it, so both arms line up for it
         tight = tight or (wanted and level >= 2 and bool(kept) and kept[-1] not in doubles and singles % 2 == 1 and scores[step] > scores[kept[-1]])

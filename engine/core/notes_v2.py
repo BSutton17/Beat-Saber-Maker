@@ -203,9 +203,13 @@ def make_notes_v3(scores, measures, times, per_beat, spans, settings, per_second
     steps = choose_steps(scores, times, measures, spans, settings, per_second, floor, pace, activity)
     steps = without_stray_opening(steps, times)
     profile = patterns_v3.PATTERNS[level_name]
+    streams = (set(), [])
     if settings.get("combos"):
-        steps = patterns_v3.add_combo_runs(steps, measures, times, levels, pace=pace, activity=activity)
-    steps, doubles = patterns_v3.plan_doubles(steps, scores, measures, times, per_beat, settings, profile, levels, offset)
+        # with pacing (engine version 2), the song's frantic parts become streams, a note on every step; version-1 songs build as before
+        if settings.get("pacing"):
+            streams = patterns_v3.stream_steps(measures, times, levels, per_beat, offset, activity)
+        steps = patterns_v3.add_combo_runs(steps, measures, times, levels, pace=pace, activity=activity, streams=streams)
+    steps, doubles = patterns_v3.plan_doubles(steps, scores, measures, times, per_beat, settings, profile, levels, offset, streams=streams[0])
     return patterns_v3.place(steps, doubles, measures, times, levels, settings, profile, offset)
 
 

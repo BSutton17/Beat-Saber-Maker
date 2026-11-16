@@ -181,7 +181,7 @@ export default function MapOptions({ song, status, coverVersion, onJob }) {
         <h2>Extras</h2>
         <label className="toggle"><input type="checkbox" checked={patterns} onChange={(e) => setPatterns(e.target.checked)} /> <span><b>Varied patterns</b>: travel, crossovers, doubles, stacks, chains and arcs on Normal and up, instead of plain up-down</span></label>
         <div className="toggle">
-          <span><b>Combo areas on Expert</b>: back-to-back runs where the voice and drums are busy, and fewer gaps</span>
+          <span><b>Combo areas on Expert</b>: the song's most frantic part becomes a steady stream of notes that only breaks for a breath; elsewhere, back-to-back runs where the voice and drums are busy</span>
           <select value={String(combos)} onChange={(e) => setCombos(e.target.value === 'auto' ? 'auto' : e.target.value === 'true')}>
             <option value="auto">Auto ({a.combos_auto ? 'on' : 'off'} for this song)</option>
             <option value="true">On</option>

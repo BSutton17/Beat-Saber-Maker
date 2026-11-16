@@ -47,6 +47,33 @@ ENVIRONMENTS = {
     "BillieEnvironment": {"jobs": {"back": [0, 6], "main": [1, 7], "left": [2, 10], "right": [3, 11], "center": [4]}, "spin": None, "zoom": None, "speed": (12, 13), "always_lit": [4]},
     # the auroras on 0 and 1, the tower lights on 2, 3, 6, 7, 10 and 11, and the tower coils' height on 12, 13 and 16-19
     "GagaEnvironment": {"jobs": {"back": [0], "main": [1], "left": [2, 6, 10], "right": [3, 7, 11], "center": [4]}, "spin": None, "zoom": None, "speed": None, "coils": (12, 13, 16, 17, 18, 19), "always_lit": [0]},
+    # the rest use the standard five lanes; they differ in which triggers they have (BSMG wiki, basic lighting). The game ignores events for lights an environment doesn't have.
+    "TriangleEnvironment": {"jobs": {"back": [0], "main": [1], "left": [2], "right": [3], "center": [4]}, "spin": 8, "zoom": 9, "speed": (12, 13)},
+    # Nice's "left" and "right" lasers are below and above the track
+    "NiceEnvironment": {"jobs": {"back": [0], "main": [1], "left": [2], "right": [3], "center": [4]}, "spin": 8, "zoom": 9, "speed": (12, 13)},
+    # Imagine Dragons' side lights on 0 show the opposite colour of the event
+    "DragonsEnvironment": {"jobs": {"back": [0], "main": [1], "left": [2], "right": [3], "center": [4]}, "spin": 8, "zoom": 9, "speed": (12, 13)},
+    "MonstercatEnvironment": {"jobs": {"back": [0], "main": [1], "left": [2], "right": [3], "center": [4]}, "spin": 8, "zoom": None, "speed": (12, 13)},
+    "CrabRaveEnvironment": {"jobs": {"back": [0], "main": [1], "left": [2], "right": [3], "center": [4]}, "spin": 8, "zoom": None, "speed": (12, 13)},
+    "RocketEnvironment": {"jobs": {"back": [0], "main": [1], "left": [2], "right": [3], "center": [4]}, "spin": None, "zoom": None, "speed": (12, 13)},
+    "OriginsEnvironment": {"jobs": {"back": [0], "main": [1], "left": [2], "right": [3], "center": [4]}, "spin": 8, "zoom": None, "speed": (12, 13)},
+    "GreenDayEnvironment": {"jobs": {"back": [0], "main": [1], "left": [2], "right": [3], "center": [4]}, "spin": 8, "zoom": 9, "speed": (12, 13)},
+    "GreenDayGrenadeEnvironment": {"jobs": {"back": [0], "main": [1], "left": [2], "right": [3], "center": [4]}, "spin": None, "zoom": None, "speed": (12, 13)},
+    "TimbalandEnvironment": {"jobs": {"back": [0], "main": [1], "left": [2], "right": [3], "center": [4]}, "spin": 8, "zoom": 9, "speed": (12, 13)},
+    # FitBeat's ring lasers on 0 show the opposite colour of the event
+    "FitBeatEnvironment": {"jobs": {"back": [0], "main": [1], "left": [2], "right": [3], "center": [4]}, "spin": 8, "zoom": 9, "speed": (12, 13)},
+    # Linkin Park: floor and ceiling lights; 8 switches the laser mode
+    "LinkinParkEnvironment": {"jobs": {"back": [0], "main": [1], "left": [2], "right": [3], "center": [4]}, "spin": 8, "zoom": None, "speed": (12, 13)},
+    # BTS: the logo, centre lasers, side lasers and runway; 8 spins the towers and 9 moves the pillars
+    "BTSEnvironment": {"jobs": {"back": [0], "main": [1], "left": [2], "right": [3], "center": [4]}, "spin": 8, "zoom": 9, "speed": (12, 13)},
+    # Skrillex: lights on 0-4 plus lasers on 6 and 7; 8 and 9 spin its two sets of rings
+    "SkrillexEnvironment": {"jobs": {"back": [0], "main": [1], "left": [2, 6], "right": [3, 7], "center": [4]}, "spin": 8, "zoom": 9, "speed": (12, 13)},
+    "HalloweenEnvironment": {"jobs": {"back": [0], "main": [1], "left": [2], "right": [3], "center": [4]}, "spin": None, "zoom": None, "speed": (12, 13)},
+    # Weave, Fall Out Boy and EDM are group-lighting environments: only some of their lights answer these basic events, and they have no triggers.
+    # Fall Out Boy's value lane picks the video clip, so it gets no speed events.
+    "WeaveEnvironment": {"jobs": {"back": [0], "main": [1], "left": [2], "right": [3], "center": [4]}, "spin": None, "zoom": None, "speed": None},
+    "PyroEnvironment": {"jobs": {"back": [0], "main": [1], "left": [2], "right": [3], "center": [4]}, "spin": None, "zoom": None, "speed": None},
+    "EDMEnvironment": {"jobs": {"back": [0], "main": [1], "left": [2], "right": [3], "center": [4]}, "spin": None, "zoom": None, "speed": None},
 }
 
 

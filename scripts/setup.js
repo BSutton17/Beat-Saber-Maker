@@ -74,7 +74,13 @@ async function getYtDlp() {
 }
 
 // screenshots of each environment from the BSMG wiki, for the environment picker. They are the game's images, so they're downloaded here, not kept in the repository
-const PREVIEWS = { DefaultEnvironment: 'default', BigMirrorEnvironment: 'big-mirror', PanicEnvironment: 'panic', KDAEnvironment: 'kda', KaleidoscopeEnvironment: 'kaleidoscope', InterscopeEnvironment: 'interscope', BillieEnvironment: 'billie', GagaEnvironment: 'gaga' }
+const PREVIEWS = {
+  DefaultEnvironment: 'default', TriangleEnvironment: 'triangle', NiceEnvironment: 'nice', BigMirrorEnvironment: 'big-mirror', KDAEnvironment: 'kda',
+  DragonsEnvironment: 'dragons', MonstercatEnvironment: 'monstercat', CrabRaveEnvironment: 'crab-rave', PanicEnvironment: 'panic', RocketEnvironment: 'rocket',
+  OriginsEnvironment: 'origins', GreenDayEnvironment: 'green-day', GreenDayGrenadeEnvironment: 'gd-grenade', TimbalandEnvironment: 'timbaland', FitBeatEnvironment: 'fitbeat',
+  LinkinParkEnvironment: 'linkin-park', BTSEnvironment: 'bts', KaleidoscopeEnvironment: 'kaleidoscope', InterscopeEnvironment: 'interscope', SkrillexEnvironment: 'skrillex',
+  BillieEnvironment: 'billie', HalloweenEnvironment: 'spooky', GagaEnvironment: 'gaga', WeaveEnvironment: 'weave', PyroEnvironment: 'pyro', EDMEnvironment: 'edm',
+}
 
 async function getPreviews() {
   fs.mkdirSync(previewDir, { recursive: true })
