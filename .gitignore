@@ -1,0 +1,15 @@
+node_modules/
+client/dist/
+# local settings and downloads: made by npm run setup on each computer
+config.json
+bin/
+client/public/environments/
+# songs, stems and jobs: large, and the songs aren't yours to publish
+work/
+output/
+engine/analysis/
+engine/versions/
+engine/config/
+engine/.venv/
+__pycache__/
+*.pyc

@@ -1,0 +1,94 @@
+{
+ "name": "lights_v1",
+ "maps": {
+  "2bf61": "Anti-Hero (symphonic)",
+  "a6cd": "Jolene (Sanguine143Panda)",
+  "317a5": "You're Somebody Else (Taddus & Fille)",
+  "3cc9d": "Too Sweet (InfantEater91)",
+  "2b24e": "You Proof (Epix Fusion)",
+  "2bd90": "Take Me To Church (oegoe)",
+  "5be4": "Almost (Oleenick)",
+  "42345": "Somethin' Stupid (RaccoonVR)",
+  "94d8": "Superstition (TechButterfly)",
+  "1d608": "Easy on me (Majorpickle)",
+  "f52f": "Hello (LoveLessDark)",
+  "5594": "Let's Get It On (Majorpickle)",
+  "8603": "My Way (ItsODRJR)",
+  "e0a": "Summertime Magic (Rocket)",
+  "3b7c3": "See You Again (August)",
+  "5057": "Treasure (Serenity)",
+  "30fd": "Love The Way You Lie (ft. Rihanna) (StyngMe)",
+  "ebb": "Do I Wanna Know? (Freeek)",
+  "1230": "Hymn For The Weekend (Rocket)",
+  "4980": "Paradise (Joetastic)",
+  "19bdf": "505 (CrowFGC)",
+  "860": "Wake Me Up When September Ends (DownyCat)",
+  "ef5a": "Blackbird (EmotionalFlight)",
+  "94c7": "One Dance (Joetastic)",
+  "35084": "Swimming Pools (ramenator05)",
+  "27533": "I Like You (A Happier Song) feat. Doja Cat (eurnkung)",
+  "quebec": "Quebec",
+  "love_galore": "Love Galore"
+ },
+ "relative_rate_by_energy": [
+  0.6789079471658771,
+  0.8345770409898778,
+  1.04732269990025,
+  1.1873245002379216,
+  1.2518678099385743
+ ],
+ "relative_lit_by_energy": [
+  0.6555863022298447,
+  0.8772652989731895,
+  1.012087965503342,
+  1.1979311113049842,
+  1.2571293077185948
+ ],
+ "median_events_per_second": 4.248549703062003,
+ "events_per_second_25_75": [
+  2.6926468752996433,
+  6.580096406474434
+ ],
+ "kinds": {
+  "off": 0.17949085899606806,
+  "on": 0.16657578279711852,
+  "flash": 0.10082369485979967,
+  "fade": 0.5203627701403438,
+  "transition": 0.032746893206669916
+ },
+ "lanes": {
+  "0": 0.19849455423719625,
+  "1": 0.18663362749796128,
+  "2": 0.18727543244185507,
+  "3": 0.20142976877138952,
+  "4": 0.2205795371738151,
+  "6": 0.002793539938891313,
+  "7": 0.002793539938891313,
+  "10": 0.0,
+  "11": 0.0
+ },
+ "rings_per_min": 22.51386710091751,
+ "zooms_per_min": 3.480037772870296,
+ "laser_speed_per_min": 4.621107762327062,
+ "reaction_lag_s": 0.4,
+ "intensity_parts": [
+  "bright_loudness",
+  "brightness",
+  "instruments",
+  "vocals",
+  "drums",
+  "drum_hits",
+  "bass"
+ ],
+ "intensity_weights": [
+  0.5753564415425183,
+  -0.18159121997863856,
+  -0.07751451928822012,
+  -0.04501025465675774,
+  0.40217373005702584,
+  0.6705233546566917,
+  0.312968933889771
+ ],
+ "left_out_match": 0.40158284526495136,
+ "plain_loudness_match": 0.24580214576946313
+}

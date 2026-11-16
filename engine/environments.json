@@ -1,0 +1,34 @@
+{
+ "DefaultEnvironment": {
+  "name": "The First (Default)",
+  "look": "Classic rings and lasers over a dark runway. Fits almost anything."
+ },
+ "BigMirrorEnvironment": {
+  "name": "Big Mirror",
+  "look": "A mirrored floor that reflects every light, like a ballroom. Warm and romantic."
+ },
+ "PanicEnvironment": {
+  "name": "Panic",
+  "look": "A dark theatrical hall with very bright rings. Dramatic, for songs that build."
+ },
+ "KDAEnvironment": {
+  "name": "K/DA",
+  "look": "A glossy stage with glowing arrows and lasers. Sleek pop, rap and R&B."
+ },
+ "KaleidoscopeEnvironment": {
+  "name": "Kaleidoscope",
+  "look": "A spinning tunnel of spiked rings. Hazy, psychedelic, trippy."
+ },
+ "InterscopeEnvironment": {
+  "name": "Interscope",
+  "look": "A street of hydraulic cars and lasers. Party, club and hip hop."
+ },
+ "BillieEnvironment": {
+  "name": "Billie Eilish",
+  "look": "A sun or moon over water with rain and rays. Calm, moody, cinematic."
+ },
+ "GagaEnvironment": {
+  "name": "Lady Gaga",
+  "look": "Tall towers and auroras under the stars. Big, emotional and wide open."
+ }
+}

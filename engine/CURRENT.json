@@ -1,0 +1,29 @@
+{
+ "builder": "map_song_v2",
+ "models": [
+  "rhythm_v2",
+  "lights_v1"
+ ],
+ "synced": "2026-11-16T00:46:13",
+ "files": {
+  "core/check_patterns.py": "2cf3107a686af456f72daf27be0c8833a5b55dcee374a3b14c5be3af6ac0f3f8",
+  "core/grid_tools.py": "22e6f5c7bcb24ceb3c938c7f8e2f5749426805213aacf588d21e187196b16e88",
+  "core/lights_model.py": "cfc0d3f0e224fba47926b681d1f5f6bd793f0a50acb2f5fe768d4417dbf58465",
+  "core/lights_v2.py": "8f7634d6d3b219b580bd5dd1b1bf29d3121c428485561cbd3361a4eb1725252f",
+  "core/map_song_v2.py": "862117bd3a826a2bac520916cf89dbc870b594a8ff2e1d6828549caf82c12181",
+  "core/metrics.py": "dbf712f1daa01080d048e6ca0b8156f69d1585898152c75866d5589541d847f9",
+  "core/note_engine.py": "b73e72ef8c10aae6c1a26f1562da113b02152d88572f781f135dbb4ade1748c9",
+  "core/notes_v2.py": "54fee06f9f3e5aefa4efe6dc79349bef59ba73f6d4aa293597d3b6e5fe36ef9c",
+  "core/patterns_v3.py": "461948c3c1fc160e6b37d465d3b5b8fd7936b6a0d774f794e87a8cbf235edcf4",
+  "core/rhythm_features.py": "09ca712f1c70ee0f4f8b879ff333dfb9d6cf24e5f20f9730c672bda472f50048",
+  "core/rhythm_features_v2.py": "6996f48804387883a8de67223cb7b97d5af4e0a3b1710afbb8f7eefcf204ad9c",
+  "core/rhythm_model_v2.py": "98aad598384e3658ec085921cd2c01b0c1ad26f269a537305f6d2249bdb05c32",
+  "core/separate_stems.py": "1b72ea9f69e32651bf86f5b5bf3f3fe876eb6bd66f6dd635cd07a49a0b419a95",
+  "core/syllables.py": "b1a8bf2b613e10dab720eeb0ffe40720fab0ae9c3bf2abb41af716deecce8f70",
+  "core/vocal_lines.py": "e05882bc6d2de5a9509084f3c98dfae6e68e14505c097ecb4d943fa068f0367a",
+  "models/rhythm_v2/weights.json": "7dbefa48675f03d73220eaceb478641a7c58df7458a1216cf7ed610864d4b808",
+  "models/rhythm_v2/README.md": "6b40cbe92a72a3f106cd95b2893b269520cdfa9bc758f0da72ed87601e97124c",
+  "models/lights_v1/weights.json": "a3b1162fc5b8891e74db2c4dcf1ed3261a8fca4e72a18bebb5c673f7af68239f",
+  "models/lights_v1/README.md": "a4094e1fa5d9ca105c24eee27c99d9feff73886ac39bcd0ab0f761863b1c9ac8"
+ }
+}

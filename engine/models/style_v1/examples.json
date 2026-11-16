@@ -1,0 +1,131 @@
+{
+ "about": "Songs whose environment was chosen by hand, with their measurements. The environment recommender compares new songs with these.",
+ "songs": [
+  {
+   "song": "Indigo",
+   "environment": "GagaEnvironment",
+   "why": "Auroras under a star sky, for a song about a deep blue dusk and longing.",
+   "features": {
+    "pulse": 55.34,
+    "swing": 1.0,
+    "drums": 0.2133,
+    "bass": 0.2252,
+    "vocals": 0.2953,
+    "other": 0.2662,
+    "brightness": 807.8635,
+    "minor": 0.1252,
+    "dynamics": 5.2752,
+    "clarity": 1.9973
+   },
+   "source": "AI Mapper"
+  },
+  {
+   "song": "My Dearest Darling",
+   "environment": "BigMirrorEnvironment",
+   "why": "A mirrored floor, like a ballroom, for a 1960 slow-dance ballad.",
+   "features": {
+    "pulse": 69.3,
+    "swing": 1.0,
+    "drums": 0.2272,
+    "bass": 0.0668,
+    "vocals": 0.481,
+    "other": 0.225,
+    "brightness": 1133.4881,
+    "minor": -0.2264,
+    "dynamics": 4.9027,
+    "clarity": 0.7426
+   },
+   "source": "AI Mapper"
+  },
+  {
+   "song": "Something in the Orange",
+   "environment": "BillieEnvironment",
+   "why": "A sun hanging over water, turned sunset orange, for the song's title image.",
+   "features": {
+    "pulse": 58.8,
+    "swing": 1.0,
+    "drums": 0.0639,
+    "bass": 0.2721,
+    "vocals": 0.3194,
+    "other": 0.3446,
+    "brightness": 783.6587,
+    "minor": 0.0208,
+    "dynamics": 4.5991,
+    "clarity": 0.5514
+   },
+   "source": "AI Mapper"
+  },
+  {
+   "song": "Nice For What",
+   "environment": "InterscopeEnvironment",
+   "why": "A street party of hydraulic cars, for a New Orleans bounce anthem.",
+   "features": {
+    "pulse": 93.5,
+    "swing": 0.0,
+    "drums": 0.3855,
+    "bass": 0.3233,
+    "vocals": 0.2476,
+    "other": 0.0436,
+    "brightness": 1118.2449,
+    "minor": -0.1604,
+    "dynamics": 5.3646,
+    "clarity": 1.3306
+   },
+   "source": "AI Mapper"
+  },
+  {
+   "song": "Pick Up the Phone",
+   "environment": "KaleidoscopeEnvironment",
+   "why": "A spinning psychedelic tunnel, for hazy, melodic trap.",
+   "features": {
+    "pulse": 68.5,
+    "swing": 0.0,
+    "drums": 0.2953,
+    "bass": 0.3134,
+    "vocals": 0.2229,
+    "other": 0.1685,
+    "brightness": 933.7732,
+    "minor": 0.0601,
+    "dynamics": 3.3857,
+    "clarity": 1.9307
+   },
+   "source": "AI Mapper"
+  },
+  {
+   "song": "Like Him",
+   "environment": "PanicEnvironment",
+   "why": "A dark, theatrical hall with bright rings, for a confession that builds into something huge.",
+   "features": {
+    "pulse": 64.94,
+    "swing": 1.0,
+    "drums": 0.2849,
+    "bass": 0.2514,
+    "vocals": 0.2277,
+    "other": 0.236,
+    "brightness": 829.5576,
+    "minor": -0.1161,
+    "dynamics": 5.4259,
+    "clarity": 1.606
+   },
+   "source": "AI Mapper"
+  },
+  {
+   "song": "Ice On My Baby",
+   "environment": "KDAEnvironment",
+   "why": "A glossy mirrored stage with glowing arrows, for a song about putting diamonds on someone: it reads as ice.",
+   "features": {
+    "pulse": 75.0,
+    "swing": 0.0,
+    "drums": 0.3274,
+    "bass": 0.3936,
+    "vocals": 0.1691,
+    "other": 0.1099,
+    "brightness": 699.3388,
+    "minor": 0.1683,
+    "dynamics": 3.9386,
+    "clarity": 2.3821
+   },
+   "source": "AI Mapper"
+  }
+ ]
+}

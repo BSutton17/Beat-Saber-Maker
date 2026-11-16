@@ -1,0 +1,8 @@
+# the mapping engine; npm run setup installs these into engine/.venv when no Python on the computer already has them
+numpy>=2.3
+scipy>=1.15
+scikit-learn>=1.6
+pillow>=10
+# Demucs stem separation, CPU builds (setup adds the PyTorch CPU index)
+torch==2.11.0
+torchaudio==2.11.0
