@@ -1,0 +1,46 @@
+{
+ "window_beats": 8,
+ "hop_beats": 2,
+ "busy": {
+  "syllable": 0.3,
+  "vocal_onset": 0.5,
+  "kick": 0.5,
+  "snare_hat": 0.5,
+  "other": 0.5,
+  "bass": 0.5,
+  "chord_change": 0.5
+ },
+ "features": [
+  "energy_mean"
+ ],
+ "coef": [
+  1.2215140576435213,
+  -0.03280376289440595
+ ],
+ "trained_on": [
+  "505 (CrowFGC)",
+  "Anti-Hero (symphonic)",
+  "Do I Wanna Know? (Freeek)",
+  "Easy on me (Majorpickle)",
+  "Hello (LoveLessDark)",
+  "Hymn For The Weekend (Rocket)",
+  "I Like You (A Happier Song) feat. Doja Cat (eurnkung)",
+  "Jolene (Sanguine143Panda)",
+  "Let's Get It On (Majorpickle)",
+  "Love Galore",
+  "Love The Way You Lie (ft. Rihanna) (StyngMe)",
+  "MY EYES (aromix)",
+  "My Way (ItsODRJR)",
+  "One Dance (Joetastic)",
+  "Quebec",
+  "See You Again (August)",
+  "Somethin' Stupid (RaccoonVR)",
+  "Summertime Magic (Rocket)",
+  "Superstition (TechButterfly)",
+  "Swimming Pools (ramenator05)",
+  "Too Sweet (InfantEater91)",
+  "Treasure (Serenity)",
+  "Wake Me Up When September Ends (DownyCat)",
+  "You Proof (Epix Fusion)"
+ ]
+}

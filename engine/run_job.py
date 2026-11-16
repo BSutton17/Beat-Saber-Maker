@@ -101,7 +101,8 @@ def tempo_for(job, folder, audio_hash):
     cache = folder / "tempo.json"
     if cache.exists():
         saved = json.loads(cache.read_text())
-        if saved.get("audio") == audio_hash:
+        # a tempo found by an older detector is found again (version 2 finds tempo changes, like MY EYES at 2:26)
+        if saved.get("audio") == audio_hash and saved.get("detector") == tempo_auto.VERSION:
             return saved["tempo"]
     progress("tempo", "Finding the tempo and beat")
     import numpy as np
@@ -110,7 +111,7 @@ def tempo_for(job, folder, audio_hash):
     mono, rate = audio_io.decode(job["audio"])
     found = tempo_auto.detect(signal.resample_poly(mono, grid_tools.SR, rate).astype(np.float32))
     found["source"] = "detected"
-    cache.write_text(json.dumps({"audio": audio_hash, "tempo": found}))
+    cache.write_text(json.dumps({"audio": audio_hash, "detector": tempo_auto.VERSION, "tempo": found}))
     return found
 
 
@@ -133,6 +134,29 @@ def write_cover(source, target):
     side = min(img.size)
     left, top = (img.width - side) // 2, (img.height - side) // 2
     img.crop((left, top, left + side, top + side)).resize((512, 512), Image.LANCZOS).save(target, "JPEG", quality=92)
+
+
+def keep_jump_settings(out, name, kept, report):
+    """Put the user's own jump speed and offset back on the rebuilt difficulties, then rewrite Info.dat in the zip too."""
+    import zipfile
+    info_path = out / "Info.dat"
+    info = json.loads(info_path.read_text(encoding="utf-8"))
+    for row in info["difficultyBeatmaps"]:
+        njs, offset = kept.get((row["characteristic"], row["difficulty"]), (None, None))
+        if njs is not None:
+            row["noteJumpMovementSpeed"] = njs
+        if offset is not None:
+            row["noteJumpStartBeatOffset"] = offset
+            if row["characteristic"] == "Standard" and row["difficulty"] in report.get("difficulties", {}):
+                report["difficulties"][row["difficulty"]].update({"njs": row["noteJumpMovementSpeed"], "offset": offset, "kept_your_jump": True})
+    info_path.write_text(json.dumps(info, separators=(",", ":")), encoding="utf-8")
+    package = out / f"{name}.zip"
+    if package.exists():
+        with zipfile.ZipFile(package) as old:
+            names = old.namelist()
+        with zipfile.ZipFile(package, "w", zipfile.ZIP_DEFLATED) as archive:
+            for file_name in names:
+                archive.write(out / file_name, file_name)
 
 
 def build(job):
@@ -159,7 +183,11 @@ def build(job):
     cfg = {"title": job["title"], "subtitle": job.get("subtitle", ""), "artist": job.get("artist", ""), "raw": str(Path(job["audio"]).resolve()), "song_file": "song.ogg",
            "folder": name, "pulse_bpm": tempo["pulse_bpm"], "per_beat": tempo["per_beat"], "map_beats_per_pulse": tempo["map_beats_per_pulse"], "difficulties": difficulties,
            "cover": "", "environment": environment, "colors": colors, "style": style, "patterns": bool(job.get("patterns", True)),
-           "mood": found["description"], "made_by": "Beat Saber Maker"}
+           "mood": found["description"], "made_by": "Beat Saber Maker",
+           # engine version 2: notes paced by the song's calm and busy parts, and the beat grid straightened where the tracker slipped
+           "version": 2}
+    if tempo.get("tempo_sections"):
+        cfg["tempo_sections"] = tempo["tempo_sections"]
     if combos and "Expert" in difficulties:
         cfg["settings"] = {"Expert": COMBO_SETTINGS}
     if job.get("lightshow"):
@@ -173,6 +201,13 @@ def build(job):
         style_engine.save_pick(job["title"], found["features"], environment)
 
     created = not out.exists()
+    # jump speed and offset set by hand in ChroMapper are kept through a rebuild. Info.dat is rewritten from these settings anyway, so a change there alone
+    # (jump settings, or ChroMapper's own re-save) doesn't stop the rebuild; edited notes or lights still do
+    kept_jumps = {}
+    if not created and (out / "Info.dat").exists() and (record / "Info.dat").exists():
+        old_info = json.loads((out / "Info.dat").read_text(encoding="utf-8-sig"))
+        kept_jumps = {(r["characteristic"], r["difficulty"]): (r.get("noteJumpMovementSpeed"), r.get("noteJumpStartBeatOffset")) for r in old_info.get("difficultyBeatmaps", [])}
+        shutil.copy2(record / "Info.dat", out / "Info.dat")
     out.mkdir(parents=True, exist_ok=True)
     progress("build", "Placing notes and lights with the current model")
     if job.get("cover"):
@@ -203,6 +238,8 @@ def build(job):
     finally:
         sys.argv = old_argv
     report = json.loads(next(line for line in reversed(captured.lines) if line.startswith("{")))
+    if kept_jumps:
+        keep_jump_settings(out, name, kept_jumps, report)
 
     progress("check", "Checking the swing flow")
     check = LineWriter(lambda line: None)

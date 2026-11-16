@@ -100,6 +100,20 @@ def by_value(path):
             last[round(float(e["b"]), 3)] = data["colorBoostEventsData"][e.get("i", 0)].get("b")
         data["colorBoostEvents"] = [[b, v] for b, v in sorted(last.items())]
         data.pop("colorBoostEventsData", None)
+    # arcs and chains point into the note-data table, which ChroMapper renumbers when it saves, so they're compared by what they point at.
+    # ChroMapper also writes a blue arc's tail with the red colour, so a tail's colour is left out
+    notes_data = data.get("colorNotesData", [])
+    pointed = lambda i: notes_data[i] if 0 <= i < len(notes_data) else {"missing": i}
+    if "arcs" in data:
+        arc_data = data.get("arcsData") or [{}]
+        data["arcs"] = [{"hb": a.get("hb", 0), "tb": a.get("tb", 0), "hr": a.get("hr", 0), "tr": a.get("tr", 0), "head": pointed(a.get("hi", 0)),
+                         "tail": {k: v for k, v in pointed(a.get("ti", 0)).items() if k != "c"}, "shape": arc_data[min(a.get("ai", 0), len(arc_data) - 1)]} for a in data["arcs"]]
+        data.pop("arcsData", None)
+    if "chains" in data:
+        chain_data = data.get("chainsData") or [{}]
+        data["chains"] = [{"hb": c.get("hb", 0), "tb": c.get("tb", 0), "hr": c.get("hr", 0), "tr": c.get("tr", 0), "head": pointed(c.get("i", 0)),
+                           "shape": chain_data[min(c.get("ci", 0), len(chain_data) - 1)]} for c in data["chains"]]
+        data.pop("chainsData", None)
     for items, table in (("colorNotes", "colorNotesData"), ("basicEvents", "basicEventsData")):
         if items in data:
             data[items] = [{"b": e["b"], **data[table][e.get("i", 0)]} for e in data[items]]
@@ -128,7 +142,12 @@ def main():
     frames = len(audio)
     duration = frames / rate
     mono = signal.resample_poly(audio, grid_tools.SR, rate).astype(np.float32)
-    raw_beats = grid_tools.track_beats(grid_tools.onset_envelope(mono), cfg["pulse_bpm"])
+    # a song whose tempo changes lists its parts in tempo_sections, each tracked at its own tempo
+    envelope = grid_tools.onset_envelope(mono)
+    raw_beats = grid_tools.track_beats_sections(envelope, cfg["tempo_sections"]) if cfg.get("tempo_sections") else grid_tools.track_beats(envelope, cfg["pulse_bpm"])
+    # where the tracker slipped off the beat, a steady tempo line that fits the sound better takes over (grid_tools.straighten); a song can turn this off
+    if cfg.get("straighten", True) and cfg.get("version", 1) >= 2:
+        raw_beats = grid_tools.straighten(raw_beats, envelope, cfg.get("tempo_sections"))
     fitted, steady = grid_tools.fitted_beats(raw_beats)
     per_beat, per_pulse = cfg["per_beat"], cfg["map_beats_per_pulse"]
     times = grid_tools.steps_from_beats(fitted, per_beat)
@@ -164,7 +183,8 @@ def main():
         levels[a * per_beat:b * per_beat + 1] = section_level
     for level in [l for l in LEVEL_ORDER if l in cfg["difficulties"]]:
         # a song may adjust a level's settings, e.g. {"Expert": {"combos": true, "max_rest_s": 0.6, "per_second": 4.0}} for combo areas; songs without it build as before
-        settings = {**notes_v2.DIFFICULTY[level], **cfg.get("settings", {}).get(level, {})}
+        # engine version 2 (Beat Saber Maker) also paces the notes by the song's calm and busy parts (models/pacing_v1)
+        settings = {**notes_v2.DIFFICULTY[level], **({"pacing": True} if cfg.get("version", 1) >= 2 else {}), **cfg.get("settings", {}).get(level, {})}
         scores = rhythm_model_v2.score(measures, level)
         floor = weights["levels"][level]["floor"]
         wanted = min(settings["per_second"], expert_rate * notes_v2.SHARE_OF_EXPERT[level]) * cfg.get("density", {}).get(level, 1.0)

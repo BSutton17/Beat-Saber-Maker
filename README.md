@@ -30,10 +30,11 @@ Everything that makes a map lives in `engine/` and is part of this repository, s
 | Part | Where | What it does |
 |---|---|---|
 | Rhythm model | `engine/models/rhythm_v2` | where notes go, per difficulty |
+| Pacing model | `engine/models/pacing_v1` | calm parts stay calm (longer rests, no combo runs); busy parts get the combos. Tested on 22 human maps; see its README |
 | Lighting model | `engine/models/lights_v1` | how intense each moment feels, for mood lighting |
 | Environment model | `engine/models/style_v1` | nearest match to songs whose environment was chosen by hand; learns from your manual picks (`your_picks.json`) |
 | Mapping engine | `engine/core` | patterns, flow, lights and the map writer |
-| Tempo | `engine/tempo_auto.py` | pulse and subdivision; matches the hand-chosen grid on all 10 earlier songs |
+| Tempo | `engine/tempo_auto.py` | pulse, subdivision and tempo changes (like MY EYES at 2:26); matches the hand-chosen grid on all 10 earlier songs, with no false tempo changes on those or on 27 human maps |
 | Colours | `engine/style_engine.py` | vivid colours from the cover, or a mood palette when the cover is grey |
 
 **Keeping the model current.** `engine/core` and `engine/models` are copies from the AI Mapper project. When a newer model is made there, use **Settings → Update model**, or run `npm run sync-model`. It copies the builder, every module it imports and the model folders named in `AI Mapper/models/CURRENT.json`, so the program never needs rewriting for a new model. Commit afterwards to carry the new model to other computers.
@@ -50,3 +51,4 @@ Everything that makes a map lives in `engine/` and is part of this repository, s
 - Only download songs you have the right to use. YouTube's terms restrict downloading.
 - The environment pictures come from the BSMG wiki and are the game's own images, so setup downloads them rather than keeping them in the repository.
 - Maps aren't playtested by the program: always play them.
+- Rebuilding a map keeps the jump speed and offset you set in ChroMapper. It stops instead of overwriting if you edited notes or lights.

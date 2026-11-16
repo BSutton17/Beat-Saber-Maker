@@ -229,7 +229,12 @@ def double_choice(hands, t, e, step):
     return max(options) if options else None
 
 
-def add_combo_runs(steps, measures, times, levels, max_run=8):
+# combos only where the drums and voice are at least as busy as usual for the song, and the part isn't quiet
+COMBO_ACTIVITY = 1.0
+COMBO_PACE = 0.9
+
+
+def add_combo_runs(steps, measures, times, levels, max_run=8, pace=None, activity=None):
     """Combo areas: where the voice or the drums keep moving, fill the space between notes with back-to-back steps, so busy parts play as continuous runs.
 
     Only on the step grid, never finer, and each run stops after max_run notes for a breath. The user asked for these on Expert: fewer gaps, more combos, not harder cuts.
@@ -241,7 +246,8 @@ def add_combo_runs(steps, measures, times, levels, max_run=8):
         if not 2 <= b - a <= 3 or levels[a] < 2:
             continue
         for k in range(a + 1, b):
-            if busy[k] and measures[k, ENERGY_COLUMN] >= 0.42:
+            # given a pace, only parts that aren't quiet and where the drums and voice are busy for this song get combos, so calm parts stay calm
+            if busy[k] and measures[k, ENERGY_COLUMN] >= 0.42 and (pace is None or pace[k] >= COMBO_PACE) and (activity is None or activity[k] >= COMBO_ACTIVITY):
                 chosen.add(k)
     # break any run that grew past max_run, so the player gets a breath
     out, run = [], 0

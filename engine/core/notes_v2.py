@@ -9,6 +9,7 @@ from note_engine import (DOWN, DOWN_FAMILY, Hand, LEFT, RIGHT, TO_LEFT, TO_RIGHT
 from rhythm_features_v2 import NAMES
 
 SYLLABLE, KICK, SNARE, CHORD, PHRASE, ENERGY = (NAMES.index(n) for n in ("syllable", "kick", "snare_hat", "chord_change", "phrase_start", "energy"))
+VOCAL_ONSET_COLUMN = NAMES.index("vocal_onset")
 # per_second: note moments a second. min_gap_s: the shortest gap between moments. line_gap_s: the longest gap allowed inside a sung line, so the notes don't seem to stop while the singing carries on.
 # max_rest_s: the longest gap while there's still music, since notes that stop feel wrong even when the voice has only paused. double_share: most of the notes that may be two-handed hits. reset_s: a rest this long lets both arms return, so the next swing may go down again. Expert's numbers are what the user loved.
 DIFFICULTY = {
@@ -24,22 +25,86 @@ FIRST_NOTE_SECONDS = 3.0
 STRAY_OPENING_MOMENTS, STRAY_OPENING_REST = 6, 4.0
 QUIET_ENERGY = 0.42
 FAST_HAND_S = 0.36
+# pacing (models/pacing_v1): each part's share of the notes follows how loud it is against the rest of the song, counted over this many seconds around each step
+PACE_WINDOW_S = 4.0
+PACE_RANGE = (0.25, 3.0)
+# whether pace also caps how many notes each part may take (False: pace only lets calm parts rest longer and keeps combos to busy parts)
+PACE_QUOTA = False
+# how strongly a part's pace tilts which steps are chosen: score x pace ** PACE_BIAS (0 = not at all)
+PACE_BIAS = 0.0
+# a calm part may rest up to this many times longer than the level's usual longest rest
+CALM_REST_STRETCH = 2.5
+# in clearly calm parts (below CALM_BELOW of the song's usual loudness or drum-and-voice activity), notes are at least this far apart, so they settle into a
+# steady pulse instead of back-to-back pairs. Human Expert maps use far fewer back-to-back notes where the drums and voice are quiet. 0 turns it off.
+CALM_MIN_GAP_S = 0.0
+# tested on 22 human Expert maps and left off: pacing alone already brings back-to-back notes in calm parts to 26% (humans 31%); this rule took them to 0% and
+# lowered placement accuracy (F1 0.953 to 0.944) and the fit on the user's Love Galore (+0.78 to +0.66)
+CALM_BELOW = 0.8
 
 
-def choose_steps(scores, times, measures, spans, settings, per_second, floor):
-    """The steps people would most likely map, likeliest first, spaced apart, then enough to keep sung lines going."""
+def gap_at(settings, pace, activity, k):
+    """The shortest gap allowed around step k."""
+    gap = settings["min_gap_s"]
+    if CALM_MIN_GAP_S and pace is not None and activity is not None and min(float(pace[k]), float(activity[k])) < CALM_BELOW:
+        gap = max(gap, CALM_MIN_GAP_S)
+    return gap
+
+
+def pace_for(measures, per_beat):
+    """How busy each step's part of the song should be, against the song's average, from the pacing model."""
+    import pacing_model
+    return np.clip(pacing_model.pacing(measures, per_beat), *PACE_RANGE)
+
+
+def activity_for(measures, times, window_s=4.0):
+    """How much the drums and voice are doing around each step (snare or hi-hat hits and vocal onsets a second), against the song's own median.
+    In 21 human Expert maps, busier parts like this have more back-to-back runs within a song (16 of 21 songs); loudness can't see it: MY EYES' calm
+    and hard halves are equally loud, but its hard half has about three times the drum and vocal hits."""
+    hit = ((measures[:, SNARE] > 0.5) | (measures[:, VOCAL_ONSET_COLUMN] > 0.5)).astype(float)
+    cum = np.concatenate([[0.0], np.cumsum(hit)])
+    low = np.searchsorted(times, times - window_s / 2)
+    high = np.searchsorted(times, times + window_s / 2)
+    rate = (cum[high] - cum[low]) / window_s
+    playing = measures[:, ENERGY] >= QUIET_ENERGY
+    typical = float(np.median(rate[playing])) if playing.any() else float(np.median(rate))
+    return rate / max(typical, 1e-6)
+
+
+def stretch(pace, k, activity=None):
+    """How much longer rests may be at step k: 1 in average or busy parts, up to CALM_REST_STRETCH in the calmest, by loudness or by how little is happening."""
+    if pace is None:
+        return 1.0
+    calm = float(pace[k]) if activity is None else min(float(pace[k]), float(activity[k]))
+    return float(min(CALM_REST_STRETCH, 1.0 / max(calm, 1.0 / CALM_REST_STRETCH)))
+
+
+def choose_steps(scores, times, measures, spans, settings, per_second, floor, pace=None, activity=None):
+    """The steps people would most likely map, likeliest first, spaced apart, then enough to keep sung lines going.
+    Given a pace, the song's notes are shared out by it: no part takes more than its share, so calm parts stay calm and busy parts get more."""
     usable = (times >= FIRST_NOTE_SECONDS) & (measures[:, ENERGY] >= QUIET_ENERGY)
     wanted = int(round(per_second * (times[-1] - max(times[0], FIRST_NOTE_SECONDS))))
     min_gap = settings["min_gap_s"]
     chosen = []
     taken = np.zeros(len(times), bool)
+    if pace is not None:
+        pace = pace / max(float(pace[usable].mean()), 1e-9) if usable.any() else pace
+        share = np.where(usable, pace, 0.0)
+        expected = np.concatenate([[0.0], np.cumsum(wanted * share / max(share.sum(), 1e-9))])
+        low_edge = np.searchsorted(times, times - PACE_WINDOW_S / 2)
+        high_edge = np.searchsorted(times, times + PACE_WINDOW_S / 2)
+        quota = expected[high_edge] - expected[low_edge]
+        if PACE_BIAS:
+            scores = scores * pace ** PACE_BIAS
     for step in np.argsort(scores)[::-1].tolist():
         if len(chosen) >= wanted or scores[step] <= floor:
             break
         if not usable[step]:
             continue
-        low = int(np.searchsorted(times, times[step] - min_gap + 1e-6))
-        high = int(np.searchsorted(times, times[step] + min_gap - 1e-6))
+        if pace is not None and PACE_QUOTA and taken[low_edge[step]:high_edge[step]].sum() + 1 > quota[step] + 0.5:
+            continue
+        here_gap = gap_at(settings, pace, activity, step)
+        low = int(np.searchsorted(times, times[step] - here_gap + 1e-6))
+        high = int(np.searchsorted(times, times[step] + here_gap - 1e-6))
         if taken[low:high].any():
             continue
         chosen.append(step)
@@ -50,29 +115,31 @@ def choose_steps(scores, times, measures, spans, settings, per_second, floor):
         anchors = sorted(set([first] + inside + [last]))
         for a, b in zip(anchors, anchors[1:]):
             at = a
-            while times[b] - times[at] > line_gap:
-                reach_low = int(np.searchsorted(times, times[at] + max(min_gap, 0.55 * line_gap)))
-                reach_high = int(np.searchsorted(times, times[at] + line_gap))
-                options = [k for k in range(reach_low, min(reach_high + 1, b)) if usable[k] and times[b] - times[k] >= min_gap]
+            while times[b] - times[at] > line_gap * stretch(pace, at, activity):
+                gap_here = line_gap * stretch(pace, at, activity)
+                reach_low = int(np.searchsorted(times, times[at] + max(min_gap, 0.55 * gap_here)))
+                reach_high = int(np.searchsorted(times, times[at] + gap_here))
+                options = [k for k in range(reach_low, min(reach_high + 1, b)) if usable[k] and times[b] - times[k] >= gap_at(settings, pace, activity, k) and times[k] - times[at] >= gap_at(settings, pace, activity, k)]
                 if not options:
                     break
                 best = max(options, key=lambda k: scores[k])
                 taken[best] = True
                 at = best
-    return np.flatnonzero(fill_rests(taken, scores, times, usable, settings)).tolist()
+    return np.flatnonzero(fill_rests(taken, scores, times, usable, settings, pace, activity)).tolist()
 
 
-def fill_rests(taken, scores, times, usable, settings):
-    """Add the likeliest steps wherever the notes rest too long, including before the first note, so long as there's music to play them on."""
-    max_rest = settings["max_rest_s"]
+def fill_rests(taken, scores, times, usable, settings, pace=None, activity=None):
+    """Add the likeliest steps wherever the notes rest too long, including before the first note, so long as there's music to play them on.
+    Given a pace, calm parts may rest longer (stretch), so the map breathes where the song does."""
     start = next((k for k in range(len(times)) if usable[k]), 0)
     marks = sorted(set([start] + np.flatnonzero(taken).tolist() + [len(times) - 1]))
     for a, b in zip(marks, marks[1:]):
         at = a
-        while times[b] - times[at] > max_rest:
+        while times[b] - times[at] > settings["max_rest_s"] * stretch(pace, at, activity):
+            max_rest = settings["max_rest_s"] * stretch(pace, at, activity)
             low = int(np.searchsorted(times, times[at] + 0.6 * max_rest))
             high = int(np.searchsorted(times, times[at] + max_rest))
-            options = [k for k in range(low, min(high + 1, b)) if usable[k] and times[b] - times[k] >= settings["min_gap_s"]]
+            options = [k for k in range(low, min(high + 1, b)) if usable[k] and times[b] - times[k] >= gap_at(settings, pace, activity, k) and times[k] - times[at] >= gap_at(settings, pace, activity, k)]
             if not options:
                 # silence or too close to the next note: jump past it
                 at = max(high, at + 1)
@@ -131,17 +198,21 @@ def plan_doubles(steps, scores, measures, times, per_beat, settings, offset):
 def make_notes_v3(scores, measures, times, per_beat, spans, settings, per_second, floor, offset, levels, level_name):
     """The same rhythm, placed by the pattern engine. Returns (notes, chains, arcs)."""
     import patterns_v3
-    steps = choose_steps(scores, times, measures, spans, settings, per_second, floor)
+    pace = pace_for(measures, per_beat) if settings.get("pacing") else None
+    activity = activity_for(measures, times) if settings.get("pacing") else None
+    steps = choose_steps(scores, times, measures, spans, settings, per_second, floor, pace, activity)
     steps = without_stray_opening(steps, times)
     profile = patterns_v3.PATTERNS[level_name]
     if settings.get("combos"):
-        steps = patterns_v3.add_combo_runs(steps, measures, times, levels)
+        steps = patterns_v3.add_combo_runs(steps, measures, times, levels, pace=pace, activity=activity)
     steps, doubles = patterns_v3.plan_doubles(steps, scores, measures, times, per_beat, settings, profile, levels, offset)
     return patterns_v3.place(steps, doubles, measures, times, levels, settings, profile, offset)
 
 
 def make_notes(scores, measures, times, per_beat, spans, settings, per_second, floor, offset=0):
-    steps = choose_steps(scores, times, measures, spans, settings, per_second, floor)
+    pace = pace_for(measures, per_beat) if settings.get("pacing") else None
+    activity = activity_for(measures, times) if settings.get("pacing") else None
+    steps = choose_steps(scores, times, measures, spans, settings, per_second, floor, pace, activity)
     steps = without_stray_opening(steps, times)
     steps, doubles = plan_doubles(steps, scores, measures, times, per_beat, settings, offset)
     bar_steps = 4 * per_beat
